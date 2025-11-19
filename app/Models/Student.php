@@ -17,4 +17,9 @@ class Student extends Model
         'dob' => 'date'
         ];
 
+    public function qualifications()
+    {
+        return $this->hasMany(StudentQualification::class)->orderBy('id', 'asc');
+    }
+
 }

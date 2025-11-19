@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\StudentQualification;
 use Illuminate\Http\Request;
 use App\Traits\ImageHelperTrait;
 use Illuminate\Support\Facades\DB;
@@ -81,7 +82,16 @@ class StudentController extends Controller
             $data['subjects'] = json_encode($data['subjects'] ?? []);
             $data['hobbies'] = json_encode($data['hobbies'] ?? []);
 
-            Student::create($data);
+            $student = Student::create($data);
+
+            foreach ($request->qualification as $q) {
+                StudentQualification::create([
+                    'student_id'    => $student->id,
+                    'course'        => $q['course'],
+                    'passing_year'  => $q['year'],
+                    'percentage'    => $q['percentage'],
+                ]);
+            }
 
             DB::commit();
 
@@ -144,6 +154,39 @@ class StudentController extends Controller
             $data['languages'] = json_encode($data['languages'] ?? []);
 
             $student->update($data);
+
+
+            $existingIds = $student->qualifications->pluck('id')->toArray();
+            $submittedIds = [];
+
+            foreach ($request->qualification as $row) {
+
+                if (!empty($row['id'])) {
+                    // Update existing row
+                    $submittedIds[] = $row['id'];
+
+                    StudentQualification::where('id', $row['id'])->update([
+                        'course' => $row['course'],
+                        'passing_year' => $row['year'],
+                        'percentage' => $row['percentage']
+                    ]);
+                } 
+                else {
+                    // Create new row
+                    StudentQualification::create([
+                        'student_id' => $student->id,
+                        'course' => $row['course'],
+                        'passing_year' => $row['year'],
+                        'percentage' => $row['percentage']
+                    ]);
+                }
+            }
+
+            // Delete removed qualifications
+            $deleteIds = array_diff($existingIds, $submittedIds);
+            if ($deleteIds) {
+                StudentQualification::whereIn('id', $deleteIds)->delete();
+            }
 
             DB::commit();
 

@@ -153,6 +153,44 @@
         @enderror
       </div>
 
+      <div class="col-12 mt-4">
+        <h5>Qualifications</h5>
+
+        <table class="table table-bordered" id="qualificationTable">
+          <thead class="table-light">
+            <tr>
+              <th>Course</th>
+              <th>Year</th>
+              <th>Percentage</th>
+              <th width="50">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @php $i=0; @endphp
+
+            @foreach($student->qualifications as $q)
+            <tr>
+              <td>
+                <input type="hidden" name="qualification[{{ $i }}][id]" value="{{ $q->id }}">
+                <input type="text" name="qualification[{{ $i }}][course]" value="{{ $q->course }}" class="form-control course-input">
+              </td>
+              <td><input type="number" name="qualification[{{ $i }}][year]" value="{{ $q->passing_year }}" class="form-control"></td>
+              <td><input type="number" name="qualification[{{ $i }}][percentage]" value="{{ $q->percentage }}" class="form-control"></td>
+              <td class="text-center">
+                @if($i==0)
+                  <button type="button" class="btn btn-success btn-sm addRow">+</button>
+                @else
+                  <button type="button" class="btn btn-danger btn-sm removeRow">−</button>
+                @endif
+              </td>
+            </tr>
+            @php $i++; @endphp
+            @endforeach
+
+          </tbody>
+        </table>
+      </div>
+
       <div class="col-12">
         <button type="submit" class="btn btn-primary">Update</button>
         <a href="{{ route('students.index') }}" class="btn btn-secondary">Cancel</a>
@@ -232,6 +270,96 @@ $(document).ready(function(){
       fav_color: { required: true }
     }
   });
+
+  var rowIndex = $("#qualificationTable tbody tr").length;
+
+// Unique Course Rule
+$.validator.addMethod("uniqueCourse", function(value, element){
+    let courses = [];
+
+    $(".course-input").each(function(){
+        let val = $(this).val().trim().toLowerCase();
+        if(val) courses.push(val);
+    });
+
+    let count = courses.filter(v => v === value.trim().toLowerCase()).length;
+    return count <= 1;
+}, "Course name already added");
+
+  // Function to add validation rules to row inputs
+  function bindQualificationValidation() {
+    $(".course-input").each(function(){
+        $(this).rules("add", {
+            required: true,
+            minlength: 2,
+            uniqueCourse: true,
+            messages: {
+                required: "Course is required",
+                minlength: "Min 2 letters",
+                uniqueCourse: "Course name already added"
+            }
+        });
+    });
+
+    $("input[name*='[year]']").each(function(){
+        $(this).rules("add", {
+            required: true,
+            number: true,
+            min: 1900,
+            max: 2099,
+            messages: {
+              required: "Year required",
+              number: "Only number",
+              min: "Invalid year",
+              max: "Invalid year"
+            }
+        });
+    });
+
+    $("input[name*='[percentage]']").each(function(){
+        $(this).rules("add", {
+            required: true,
+            number: true,
+            min: 1,
+            max: 100,
+            messages: {
+              required: "Percentage required",
+              min: "Min 1",
+              max: "Max 100"
+            }
+        });
+    });
+  }
+
+// Bind validation for first row
+bindQualificationValidation();
+
+// Add row
+$(document).on("click", ".addRow", function(){
+  let newRow = `
+  <tr>
+  <td>
+          <input type="hidden" name="qualification[${rowIndex}][id]" value="">
+          <input type="text" name="qualification[${rowIndex}][course]" class="form-control course-input" placeholder="Enter course">
+        </td>
+      <td><input type="number" placeholder="Enter year" name="qualification[${rowIndex}][year]" class="form-control"></td>
+      <td><input type="number" placeholder="Enter percentage" name="qualification[${rowIndex}][percentage]" class="form-control"></td>
+      <td class="text-center">
+          <button type="button" class="btn btn-danger btn-sm removeRow">−</button>
+      </td>
+  </tr>`;
+
+  $("#qualificationTable tbody").append(newRow);
+  rowIndex++;
+
+  bindQualificationValidation(); 
+});
+
+// Remove Row
+$(document).on("click", ".removeRow", function(){
+  $(this).closest("tr").remove();
+  validator.form();
+});
 
 });
 </script>

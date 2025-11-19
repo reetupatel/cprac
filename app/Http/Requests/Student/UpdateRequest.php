@@ -47,7 +47,11 @@ class UpdateRequest extends FormRequest
             'languages.*' => ['string'],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:2048'],
             'about' => ['required', 'string', 'min:10'],
-            'fav_color' => ['required', 'string']
+            'fav_color' => ['required', 'string'],
+            'qualification' => 'required|array',
+            'qualification.*.course' => 'required',
+            'qualification.*.year' => 'required|numeric',
+            'qualification.*.percentage' => 'required|numeric'
         ];
     }
 

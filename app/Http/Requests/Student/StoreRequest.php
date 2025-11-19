@@ -42,7 +42,12 @@ class StoreRequest extends FormRequest
             'languages.*' => ['string'],
             'photo' => ['required', 'mimes:jpg,jpeg,png', 'max:2048'],
             'about' => ['required', 'string', 'min:10'],
-            'fav_color' => ['required', 'string']
+            'fav_color' => ['required', 'string'],
+            'qualification'                   => 'required|array|min:1',
+            'qualification.*.course'          => 'required|string|max:255',
+            'qualification.*.year'            => 'required|integer|min:1900|max:2099',
+            'qualification.*.percentage'      => 'required|integer|min:1|max:100',
+
         ];
     }
 
